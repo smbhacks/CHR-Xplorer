@@ -92,6 +92,7 @@
             col1.TabIndex = 12;
             col1.UseVisualStyleBackColor = false;
             col1.Click += col1_Click;
+            col1.MouseDown += col1_MouseClick;
             // 
             // col2
             // 
@@ -103,6 +104,7 @@
             col2.TabIndex = 13;
             col2.UseVisualStyleBackColor = false;
             col2.Click += col2_Click;
+            col2.MouseDown += col2_MouseClick;
             // 
             // col3
             // 
@@ -114,6 +116,7 @@
             col3.TabIndex = 14;
             col3.UseVisualStyleBackColor = false;
             col3.Click += col3_Click;
+            col3.MouseDown += col3_MouseClick;
             // 
             // col4
             // 
@@ -125,6 +128,7 @@
             col4.TabIndex = 15;
             col4.UseVisualStyleBackColor = false;
             col4.Click += col4_Click;
+            col4.MouseDown += col4_MouseClick;
             // 
             // scrollbar
             // 

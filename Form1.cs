@@ -67,7 +67,7 @@ namespace FormsLearning
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                openFileDialog.Filter = "CHR|*.chr|NES|*.nes|Any filetype|*.*";
+                openFileDialog.Filter = "NES or CHR|*.chr;*.nes|CHR|*.chr|NES|*.nes";
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     string filepath = openFileDialog.FileName;
@@ -251,6 +251,54 @@ namespace FormsLearning
                     }
                 }
             }
+        }
+
+        private void do_palette_dialog(object sender, MouseEventArgs e, int color)
+        {
+            try
+            {
+                if (e.Button == MouseButtons.Right)
+                {
+                    using (palettepicker pp = new palettepicker())
+                    {
+                        if (pp.ShowDialog() == DialogResult.OK)
+                        {
+                            var pal = m_bitmap.Palette;
+                            pal.Entries[color] = pp.selected_color;
+                            m_bitmap.Palette = pal;
+                            DrawToPanel();
+                            switch (color)
+                            {
+                                default:
+                                case 0: col1.BackColor = pp.selected_color; break;
+                                case 1: col2.BackColor = pp.selected_color; break;
+                                case 2: col3.BackColor = pp.selected_color; break;
+                                case 3: col4.BackColor = pp.selected_color; break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+        }
+        private void col1_MouseClick(object sender, MouseEventArgs e)
+        {
+            do_palette_dialog(sender, e, 0);
+        }
+        private void col2_MouseClick(object sender, MouseEventArgs e)
+        {
+            do_palette_dialog(sender, e, 1);
+        }
+        private void col3_MouseClick(object sender, MouseEventArgs e)
+        {
+            do_palette_dialog(sender, e, 2);
+        }
+        private void col4_MouseClick(object sender, MouseEventArgs e)
+        {
+            do_palette_dialog(sender, e, 3);
         }
 
         private void col1_Click(object sender, EventArgs e)
