@@ -1,6 +1,7 @@
 using System.IO;
 using System.IO.Pipes;
 using System.Numerics;
+using System.Windows.Forms;
 
 namespace FormsLearning
 {
@@ -8,6 +9,9 @@ namespace FormsLearning
     {
         public Form1()
         {
+            var pal = m_bitmap.Palette;
+            BWColors.CopyTo(pal.Entries, 0);
+            m_bitmap.Palette = pal;
             InitializeComponent();
         }
 
@@ -217,7 +221,9 @@ namespace FormsLearning
             {
                 if (colorDialog.ShowDialog() == DialogResult.OK)
                 {
-                    m_bitmap.Palette.Entries[color] = colorDialog.Color;
+                    var pal = m_bitmap.Palette;
+                    pal.Entries[color] = colorDialog.Color;
+                    m_bitmap.Palette = pal;
                     DrawToPanel();
                     switch (color)
                     {
