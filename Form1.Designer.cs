@@ -40,6 +40,7 @@
             scrollbar = new VScrollBar();
             palselect = new Button();
             paldialog = new ColorDialog();
+            label1 = new Label();
             SuspendLayout();
             // 
             // panel
@@ -146,11 +147,21 @@
             palselect.UseVisualStyleBackColor = true;
             palselect.Click += palselect_Click;
             // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(427, 187);
+            label1.Name = "label1";
+            label1.Size = new Size(38, 15);
+            label1.TabIndex = 18;
+            label1.Text = "label1";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(612, 409);
+            Controls.Add(label1);
             Controls.Add(palselect);
             Controls.Add(scrollbar);
             Controls.Add(col4);
@@ -169,6 +180,7 @@
             Text = "CHR-Xplorer";
             KeyDown += Form1_KeyDown;
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -184,5 +196,6 @@
         private VScrollBar scrollbar;
         private Button palselect;
         private ColorDialog paldialog;
+        private Label label1;
     }
 }

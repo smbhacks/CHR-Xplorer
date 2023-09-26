@@ -28,6 +28,10 @@ namespace FormsLearning
         private byte[] file_data;
         private byte[] chr_data;
         private int m_selected_tile;
+        private int m_sel_x;
+        private int m_sel_y;
+        private int m_sel_prev_x;
+        private int m_sel_prev_y;
         private int color;
         private bool nesfile;
         private int GetNESOffset()
@@ -50,7 +54,7 @@ namespace FormsLearning
             m_previous_offset = m_offset;
             using (Graphics graphics = panel.CreateGraphics())
             {
-                System.Drawing.Imaging.BitmapData bmpData = 
+                System.Drawing.Imaging.BitmapData bmpData =
                     m_bitmap.LockBits(new Rectangle(0, 0, 128, 128), System.Drawing.Imaging.ImageLockMode.ReadWrite, m_bitmap.PixelFormat);
                 IntPtr ptr = bmpData.Scan0;
                 System.Runtime.InteropServices.Marshal.Copy(chr_data, m_offset, ptr, 128 * 128);
@@ -76,11 +80,11 @@ namespace FormsLearning
                             m_offset = GetNESOffset();
                             nesfile = true;
                         }
-                        else 
+                        else
                         {
                             m_offset = 0;
                             nesfile = false;
-                        }   
+                        }
                         if (m_offset == -1)
                         {
                             MessageBox.Show("Not a valid NES file");
@@ -173,13 +177,25 @@ namespace FormsLearning
             if (file_data == null) return;
             if (e.Button == MouseButtons.Left)
             {
-                DrawToPanel();
                 using (Graphics graphics = panel.CreateGraphics())
                 {
                     int x = e.X - (e.X % (8 * 3));
                     int y = e.Y - (e.Y % (8 * 3));
+                    if(x < 0) x = 0;
+                    if(x > 120*3) x = 120*3;
+                    if(y < 0) y = 0;
+                    if(y > 120*3) y = 120 * 3;
+                    m_sel_x = x / (8 * 3);
+                    m_sel_y = y / (8 * 3) + scrollbar.Value;
+                    label1.Text = m_sel_x + " " + m_sel_y;
                     m_selected_tile = x + y * 16;
-                    graphics.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), x, y, 8 * 3, 8 * 3);
+                    if (m_sel_prev_x != m_sel_x || m_sel_prev_y != m_sel_y)
+                    {
+                        DrawToPanel();
+                        graphics.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), x, y, 8 * 3, 8 * 3);
+                    }
+                    m_sel_prev_x = m_sel_x;
+                    m_sel_prev_y = m_sel_y;
                 }
                 DrawToSelection();
             }
