@@ -18,11 +18,11 @@ namespace FormsLearning
         private string m_filename;
         private int m_offset;
         private int m_previous_offset;
-        private Bitmap m_bitmap = new Bitmap(128, 128);
+        private Bitmap m_bitmap = new Bitmap(128, 128, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
         private Bitmap m_selected_bitmap = new Bitmap(128, 128);
         private byte[] NES_Signature = { 0x4e, 0x45, 0x53, 0x1a };
         private byte[] file_data;
-        private int[] chr_data;
+        private byte[] chr_data;
         private int m_selected_tile;
         private int color;
         private bool nesfile;
@@ -46,15 +46,11 @@ namespace FormsLearning
             m_previous_offset = m_offset;
             using (Graphics graphics = panel.CreateGraphics())
             {
-                int index;
-                for (int y = 0; y < 128; y++)
-                {
-                    for (int x = 0; x < 128; x++)
-                    {
-                        index = x + y * 128 + m_offset;
-                        m_bitmap.SetPixel(x, y, BWColors[chr_data[index]]);
-                    }
-                }
+                System.Drawing.Imaging.BitmapData bmpData = 
+                    m_bitmap.LockBits(new Rectangle(0, 0, 128, 128), System.Drawing.Imaging.ImageLockMode.ReadWrite, m_bitmap.PixelFormat);
+                IntPtr ptr = bmpData.Scan0;
+                System.Runtime.InteropServices.Marshal.Copy(chr_data, m_offset, ptr, 128 * 128);
+                m_bitmap.UnlockBits(bmpData);
                 graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
                 graphics.DrawImage(m_bitmap, 0, 0, 128 * 3, 128 * 3);
             }
@@ -76,7 +72,11 @@ namespace FormsLearning
                             m_offset = GetNESOffset();
                             nesfile = true;
                         }
-                        else m_offset = 0;
+                        else 
+                        {
+                            m_offset = 0;
+                            nesfile = false;
+                        }   
                         if (m_offset == -1)
                         {
                             MessageBox.Show("Not a valid NES file");
@@ -88,7 +88,7 @@ namespace FormsLearning
                             else file_data = new byte[filestream.Length];
                             filestream.Seek(nesfile ? 16 : 0, SeekOrigin.Begin);
                             filestream.Read(file_data, 0, nesfile ? (int)filestream.Length - 16 : (int)filestream.Length);
-                            List<int> chr_data_temp = new List<int>();
+                            List<byte> chr_data_temp = new List<byte>();
                             for (int row = 0; row < (filestream.Length / 256); row++)
                             {
                                 for (int tile_row = 0; tile_row < 8; tile_row++)
@@ -103,7 +103,7 @@ namespace FormsLearning
                                             plane1 = plane1 >> bits;
                                             plane2 = plane2 >> bits;
                                             int index = (plane1 + 2 * plane2);
-                                            chr_data_temp.Add(index);
+                                            chr_data_temp.Add((byte)index);
                                         }
                                     }
                                 }
@@ -175,7 +175,7 @@ namespace FormsLearning
                     int x = e.X - (e.X % (8 * 3));
                     int y = e.Y - (e.Y % (8 * 3));
                     m_selected_tile = x + y * 16;
-                    graphics.DrawRectangle(new Pen(new SolidBrush(Color.Red)), x, y, 8 * 3, 8 * 3);
+                    graphics.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), x, y, 8 * 3, 8 * 3);
                 }
                 DrawToSelection();
             }
@@ -188,7 +188,6 @@ namespace FormsLearning
 
         private void ScrollMainPanel(int scrollvalue)
         {
-            label1.Text = m_offset.ToString();
             if (scrollvalue < 0) scrollvalue = 0;
             if (scrollvalue > (scrollbar.Maximum - scrollbar.LargeChange)) scrollvalue = scrollbar.Maximum - scrollbar.LargeChange + 1;
             scrollbar.Value = scrollvalue;
@@ -218,7 +217,8 @@ namespace FormsLearning
             {
                 if (colorDialog.ShowDialog() == DialogResult.OK)
                 {
-                    BWColors[color] = colorDialog.Color;
+                    m_bitmap.Palette.Entries[color] = colorDialog.Color;
+                    DrawToPanel();
                     switch (color)
                     {
                         default:
@@ -227,7 +227,6 @@ namespace FormsLearning
                         case 2: col3.BackColor = colorDialog.Color; break;
                         case 3: col4.BackColor = colorDialog.Color; break;
                     }
-                    DrawToPanel();
                 }
             }
         }
