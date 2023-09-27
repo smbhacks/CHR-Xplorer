@@ -38,9 +38,8 @@
             col3 = new Button();
             col4 = new Button();
             scrollbar = new VScrollBar();
-            palselect = new Button();
             paldialog = new ColorDialog();
-            label1 = new Label();
+            comboBox1 = new ComboBox();
             SuspendLayout();
             // 
             // panel
@@ -57,7 +56,7 @@
             // 
             // loadbtn
             // 
-            loadbtn.Location = new Point(556, 12);
+            loadbtn.Location = new Point(931, 12);
             loadbtn.Name = "loadbtn";
             loadbtn.Size = new Size(44, 57);
             loadbtn.TabIndex = 1;
@@ -67,7 +66,7 @@
             // 
             // savebtn
             // 
-            savebtn.Location = new Point(556, 75);
+            savebtn.Location = new Point(931, 75);
             savebtn.Name = "savebtn";
             savebtn.Size = new Size(44, 65);
             savebtn.TabIndex = 2;
@@ -76,8 +75,8 @@
             // 
             // engpanel
             // 
-            engpanel.BorderStyle = BorderStyle.Fixed3D;
-            engpanel.Location = new Point(422, 12);
+            engpanel.Location = new Point(422, 41);
+            engpanel.Margin = new Padding(0);
             engpanel.Name = "engpanel";
             engpanel.Size = new Size(128, 128);
             engpanel.TabIndex = 7;
@@ -86,7 +85,7 @@
             // 
             col1.BackColor = Color.Black;
             col1.FlatStyle = FlatStyle.Flat;
-            col1.Location = new Point(422, 146);
+            col1.Location = new Point(422, 175);
             col1.Name = "col1";
             col1.Size = new Size(30, 30);
             col1.TabIndex = 12;
@@ -98,7 +97,7 @@
             // 
             col2.BackColor = Color.DarkGray;
             col2.FlatStyle = FlatStyle.Flat;
-            col2.Location = new Point(458, 146);
+            col2.Location = new Point(458, 175);
             col2.Name = "col2";
             col2.Size = new Size(30, 30);
             col2.TabIndex = 13;
@@ -110,7 +109,7 @@
             // 
             col3.BackColor = Color.LightGray;
             col3.FlatStyle = FlatStyle.Flat;
-            col3.Location = new Point(494, 146);
+            col3.Location = new Point(494, 175);
             col3.Name = "col3";
             col3.Size = new Size(30, 30);
             col3.TabIndex = 14;
@@ -122,7 +121,7 @@
             // 
             col4.BackColor = Color.White;
             col4.FlatStyle = FlatStyle.Flat;
-            col4.Location = new Point(530, 146);
+            col4.Location = new Point(530, 175);
             col4.Name = "col4";
             col4.Size = new Size(30, 30);
             col4.TabIndex = 15;
@@ -140,33 +139,21 @@
             scrollbar.TabIndex = 16;
             scrollbar.Scroll += vScrollBar1_Scroll;
             // 
-            // palselect
+            // comboBox1
             // 
-            palselect.BackgroundImage = Properties.Resources.gradient;
-            palselect.FlatStyle = FlatStyle.Flat;
-            palselect.Location = new Point(566, 146);
-            palselect.Name = "palselect";
-            palselect.Size = new Size(30, 30);
-            palselect.TabIndex = 17;
-            palselect.UseVisualStyleBackColor = true;
-            palselect.Click += palselect_Click;
-            // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.Location = new Point(427, 187);
-            label1.Name = "label1";
-            label1.Size = new Size(38, 15);
-            label1.TabIndex = 18;
-            label1.Text = "label1";
+            comboBox1.FormattingEnabled = true;
+            comboBox1.Items.AddRange(new object[] { "8x8", "16x16", "32x32" });
+            comboBox1.Location = new Point(422, 12);
+            comboBox1.Name = "comboBox1";
+            comboBox1.Size = new Size(66, 23);
+            comboBox1.TabIndex = 17;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(612, 409);
-            Controls.Add(label1);
-            Controls.Add(palselect);
+            ClientSize = new Size(987, 417);
+            Controls.Add(comboBox1);
             Controls.Add(scrollbar);
             Controls.Add(col4);
             Controls.Add(col3);
@@ -178,13 +165,10 @@
             Controls.Add(panel);
             Icon = (Icon)resources.GetObject("$this.Icon");
             KeyPreview = true;
-            MaximumSize = new Size(628, 448);
-            MinimumSize = new Size(628, 448);
             Name = "Form1";
             Text = "CHR-Xplorer";
             KeyDown += Form1_KeyDown;
             ResumeLayout(false);
-            PerformLayout();
         }
 
         #endregion
@@ -198,8 +182,7 @@
         private Button col3;
         private Button col4;
         private VScrollBar scrollbar;
-        private Button palselect;
         private ColorDialog paldialog;
-        private Label label1;
+        private ComboBox comboBox1;
     }
 }

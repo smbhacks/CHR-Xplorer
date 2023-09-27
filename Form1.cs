@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
 using System.Numerics;
@@ -9,9 +10,12 @@ namespace FormsLearning
     {
         public Form1()
         {
-            var pal = m_bitmap.Palette;
-            BWColors.CopyTo(pal.Entries, 0);
-            m_bitmap.Palette = pal;
+            var palA = m_bitmap.Palette;
+            var palB = m_selected_bitmap.Palette;
+            BWColors.CopyTo(palA.Entries, 0);
+            BWColors.CopyTo(palB.Entries, 0);
+            m_bitmap.Palette = palA;
+            m_selected_bitmap.Palette = palB;
             InitializeComponent();
         }
 
@@ -23,7 +27,7 @@ namespace FormsLearning
         private int m_offset;
         private int m_previous_offset;
         private Bitmap m_bitmap = new Bitmap(128, 128, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
-        private Bitmap m_selected_bitmap = new Bitmap(128, 128);
+        private Bitmap m_selected_bitmap = new Bitmap(8, 8, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
         private byte[] NES_Signature = { 0x4e, 0x45, 0x53, 0x1a };
         private byte[] file_data;
         private byte[] chr_data;
@@ -59,6 +63,7 @@ namespace FormsLearning
                 IntPtr ptr = bmpData.Scan0;
                 System.Runtime.InteropServices.Marshal.Copy(chr_data, m_offset, ptr, 128 * 128);
                 m_bitmap.UnlockBits(bmpData);
+                graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half;
                 graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
                 graphics.DrawImage(m_bitmap, 0, 0, 128 * 3, 128 * 3);
             }
@@ -181,13 +186,12 @@ namespace FormsLearning
                 {
                     int x = e.X - (e.X % (8 * 3));
                     int y = e.Y - (e.Y % (8 * 3));
-                    if(x < 0) x = 0;
-                    if(x > 120*3) x = 120*3;
-                    if(y < 0) y = 0;
-                    if(y > 120*3) y = 120 * 3;
+                    if (x < 0) x = 0;
+                    if (x > 120 * 3) x = 120 * 3;
+                    if (y < 0) y = 0;
+                    if (y > 120 * 3) y = 120 * 3;
                     m_sel_x = x / (8 * 3);
-                    m_sel_y = y / (8 * 3) + scrollbar.Value;
-                    label1.Text = m_sel_x + " " + m_sel_y;
+                    m_sel_y = y / (8 * 3);
                     m_selected_tile = x + y * 16;
                     if (m_sel_prev_x != m_sel_x || m_sel_prev_y != m_sel_y)
                     {
@@ -203,7 +207,28 @@ namespace FormsLearning
 
         private void DrawToSelection()
         {
-
+            try
+            {
+                using (Graphics graphics = engpanel.CreateGraphics())
+                {
+                    System.Drawing.Imaging.BitmapData bmpData =
+                    m_selected_bitmap.LockBits(new Rectangle(0, 0, 8, 8), System.Drawing.Imaging.ImageLockMode.ReadWrite, m_selected_bitmap.PixelFormat);
+                    IntPtr ptr = bmpData.Scan0;
+                    for (int y = 0; y < 8; y++)
+                    {
+                        System.Runtime.InteropServices.Marshal.Copy(chr_data, m_offset + m_sel_x * 8 + y * 8 * 16 + m_sel_y * 8 * 8 * 16, ptr, 8);
+                        ptr += 8;
+                    }
+                    m_selected_bitmap.UnlockBits(bmpData);
+                    graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half;
+                    graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+                    graphics.DrawImage(m_selected_bitmap, 0, 0, 128, 128);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void ScrollMainPanel(int scrollvalue)
@@ -237,10 +262,14 @@ namespace FormsLearning
             {
                 if (colorDialog.ShowDialog() == DialogResult.OK)
                 {
-                    var pal = m_bitmap.Palette;
-                    pal.Entries[color] = colorDialog.Color;
-                    m_bitmap.Palette = pal;
+                    var palA = m_bitmap.Palette;
+                    var palB = m_selected_bitmap.Palette;
+                    palA.Entries[color] = colorDialog.Color;
+                    m_bitmap.Palette = palA;
+                    palB.Entries[color] = colorDialog.Color;
+                    m_bitmap.Palette = palB;
                     DrawToPanel();
+                    DrawToSelection();
                     switch (color)
                     {
                         default:
@@ -263,10 +292,14 @@ namespace FormsLearning
                     {
                         if (pp.ShowDialog() == DialogResult.OK)
                         {
-                            var pal = m_bitmap.Palette;
-                            pal.Entries[color] = pp.selected_color;
-                            m_bitmap.Palette = pal;
+                            var palA = m_bitmap.Palette;
+                            var palB = m_selected_bitmap.Palette;
+                            palA.Entries[color] = pp.selected_color;
+                            m_bitmap.Palette = palA;
+                            palB.Entries[color] = pp.selected_color;
+                            m_selected_bitmap.Palette = palB;
                             DrawToPanel();
+                            DrawToSelection();
                             switch (color)
                             {
                                 default:
