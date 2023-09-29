@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            panel = new Panel();
             loadbtn = new Button();
             savebtn = new Button();
             engpanel = new Panel();
@@ -40,19 +39,8 @@
             scrollbar = new VScrollBar();
             paldialog = new ColorDialog();
             comboBox1 = new ComboBox();
+            tabcontrol = new TabControl();
             SuspendLayout();
-            // 
-            // panel
-            // 
-            panel.BorderStyle = BorderStyle.Fixed3D;
-            panel.Location = new Point(12, 12);
-            panel.Name = "panel";
-            panel.Size = new Size(384, 384);
-            panel.TabIndex = 0;
-            panel.Paint += panel_Paint;
-            panel.MouseClick += panel_Mouse;
-            panel.MouseMove += panel_Mouse;
-            panel.MouseWheel += panel_Scroll;
             // 
             // loadbtn
             // 
@@ -75,7 +63,7 @@
             // 
             // engpanel
             // 
-            engpanel.Location = new Point(422, 41);
+            engpanel.Location = new Point(481, 38);
             engpanel.Margin = new Padding(0);
             engpanel.Name = "engpanel";
             engpanel.Size = new Size(128, 128);
@@ -85,7 +73,7 @@
             // 
             col1.BackColor = Color.Black;
             col1.FlatStyle = FlatStyle.Flat;
-            col1.Location = new Point(422, 175);
+            col1.Location = new Point(471, 175);
             col1.Name = "col1";
             col1.Size = new Size(30, 30);
             col1.TabIndex = 12;
@@ -97,7 +85,7 @@
             // 
             col2.BackColor = Color.DarkGray;
             col2.FlatStyle = FlatStyle.Flat;
-            col2.Location = new Point(458, 175);
+            col2.Location = new Point(507, 175);
             col2.Name = "col2";
             col2.Size = new Size(30, 30);
             col2.TabIndex = 13;
@@ -109,7 +97,7 @@
             // 
             col3.BackColor = Color.LightGray;
             col3.FlatStyle = FlatStyle.Flat;
-            col3.Location = new Point(494, 175);
+            col3.Location = new Point(543, 175);
             col3.Name = "col3";
             col3.Size = new Size(30, 30);
             col3.TabIndex = 14;
@@ -121,7 +109,7 @@
             // 
             col4.BackColor = Color.White;
             col4.FlatStyle = FlatStyle.Flat;
-            col4.Location = new Point(530, 175);
+            col4.Location = new Point(579, 175);
             col4.Name = "col4";
             col4.Size = new Size(30, 30);
             col4.TabIndex = 15;
@@ -132,7 +120,7 @@
             // scrollbar
             // 
             scrollbar.LargeChange = 16;
-            scrollbar.Location = new Point(399, 9);
+            scrollbar.Location = new Point(448, 12);
             scrollbar.Maximum = 16;
             scrollbar.Name = "scrollbar";
             scrollbar.Size = new Size(20, 387);
@@ -143,16 +131,26 @@
             // 
             comboBox1.FormattingEnabled = true;
             comboBox1.Items.AddRange(new object[] { "8x8", "16x16", "32x32" });
-            comboBox1.Location = new Point(422, 12);
+            comboBox1.Location = new Point(481, 12);
             comboBox1.Name = "comboBox1";
             comboBox1.Size = new Size(66, 23);
             comboBox1.TabIndex = 17;
+            // 
+            // tabcontrol
+            // 
+            tabcontrol.Location = new Point(12, 12);
+            tabcontrol.Name = "tabcontrol";
+            tabcontrol.SelectedIndex = 0;
+            tabcontrol.Size = new Size(433, 433);
+            tabcontrol.TabIndex = 18;
+            tabcontrol.SelectedIndexChanged += tabcontrol_selected;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(987, 417);
+            ClientSize = new Size(1034, 457);
+            Controls.Add(tabcontrol);
             Controls.Add(comboBox1);
             Controls.Add(scrollbar);
             Controls.Add(col4);
@@ -162,7 +160,6 @@
             Controls.Add(engpanel);
             Controls.Add(savebtn);
             Controls.Add(loadbtn);
-            Controls.Add(panel);
             Icon = (Icon)resources.GetObject("$this.Icon");
             KeyPreview = true;
             Name = "Form1";
@@ -172,8 +169,6 @@
         }
 
         #endregion
-
-        private Panel panel;
         private Button loadbtn;
         private Button savebtn;
         private Panel engpanel;
@@ -184,5 +179,6 @@
         private VScrollBar scrollbar;
         private ColorDialog paldialog;
         private ComboBox comboBox1;
+        private TabControl tabcontrol;
     }
 }

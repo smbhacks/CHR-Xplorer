@@ -10,12 +10,6 @@ namespace FormsLearning
     {
         public Form1()
         {
-            var palA = m_bitmap.Palette;
-            var palB = m_selected_bitmap.Palette;
-            BWColors.CopyTo(palA.Entries, 0);
-            BWColors.CopyTo(palB.Entries, 0);
-            m_bitmap.Palette = palA;
-            m_selected_bitmap.Palette = palB;
             InitializeComponent();
         }
 
@@ -23,24 +17,83 @@ namespace FormsLearning
         {
             Color.Black, Color.LightGray, Color.DarkGray, Color.White
         };
-        private string m_filename;
-        private int m_offset;
-        private int m_previous_offset;
-        private Bitmap m_bitmap = new Bitmap(128, 128, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
-        private Bitmap m_selected_bitmap = new Bitmap(8, 8, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
         private byte[] NES_Signature = { 0x4e, 0x45, 0x53, 0x1a };
-        private byte[] file_data;
-        private byte[] chr_data;
-        private int m_selected_tile;
-        private int m_sel_x;
-        private int m_sel_y;
-        private int m_sel_prev_x;
-        private int m_sel_prev_y;
         private int color;
-        private bool nesfile;
+        private CHRFile[] files = new CHRFile[256];
+        bool dontinitCHR;
+        private class CHRFile
+        {
+            public Bitmap m_bitmap = new Bitmap(128, 128, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
+            public Bitmap m_selected_bitmap = new Bitmap(8, 8, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
+            public string m_filename;
+            public int m_offset;
+            public int m_previous_offset;
+            public byte[] file_data;
+            public byte[] chr_data;
+            public int m_selected_tile;
+            public int m_sel_x;
+            public int m_sel_y;
+            public int m_sel_prev_x;
+            public int m_sel_prev_y;
+            public int m_graphically_x;
+            public int m_graphically_y;
+        }
+        private CHRFile get_chr_file()
+        {
+            //When I need a CHR file, return it with the proper index
+            return files[tabcontrol.SelectedIndex];
+        }
+        private CHRFile make_chr_file()
+        {
+            //Disable the tabcontrol_selected control 
+            dontinitCHR = true;
+
+            //Make a new tab
+            TabPage tab = new TabPage();
+            tab.MouseClick += panel_Mouse;
+            tab.MouseMove += panel_Mouse;
+            tab.MouseWheel += panel_Scroll;
+            tabcontrol.TabPages.Add(tab);
+            tabcontrol.SelectTab(tab);
+            
+            //Create new insstance and save it with the selected index
+            CHRFile file = new CHRFile();
+            files[tabcontrol.SelectedIndex] = file;
+
+            //Set default palette (could put this in the constructor)
+            var palA = file.m_bitmap.Palette;
+            var palB = file.m_selected_bitmap.Palette;
+            BWColors.CopyTo(palA.Entries, 0);
+            BWColors.CopyTo(palB.Entries, 0);
+            file.m_bitmap.Palette = palA;
+            file.m_selected_bitmap.Palette = palB;
+
+            //Reenable the tabcontrol_selected control
+            dontinitCHR = false;
+            return file;
+        }
+        private void tabcontrol_selected(object sender, EventArgs e)
+        {
+            if (dontinitCHR) return;
+            CHRFile f = get_chr_file();
+            scrollbar.Maximum = (f.chr_data.Length / 1024) - 1;
+            scrollbar.Value = f.m_offset / 1024;
+            DrawToPanel();
+            DrawToSelection();
+            using(Graphics graphics = tabcontrol.SelectedTab.CreateGraphics())
+            {
+                graphics.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), f.m_graphically_x, f.m_graphically_y, 8 * 3, 8 * 3);
+            }
+            col1.BackColor = f.m_bitmap.Palette.Entries[0];
+            col2.BackColor = f.m_bitmap.Palette.Entries[1];
+            col3.BackColor = f.m_bitmap.Palette.Entries[2];
+            col4.BackColor = f.m_bitmap.Palette.Entries[3];
+        }
+
         private int GetNESOffset()
         {
-            FileStream fileStream = new FileStream(m_filename, FileMode.Open, FileAccess.Read);
+            CHRFile f = get_chr_file();
+            FileStream fileStream = new FileStream(f.m_filename, FileMode.Open, FileAccess.Read);
             for (int x = 0; x < NES_Signature.Length; x++)
             {
                 if (fileStream.ReadByte() != NES_Signature[x]) return -1;
@@ -50,22 +103,24 @@ namespace FormsLearning
         }
         private void DrawToPanel()
         {
-            if (m_filename == null)
+            CHRFile f = get_chr_file();
+            if (f.m_filename == null)
             {
                 MessageBox.Show("Please open a file first", "Error");
                 return;
             }
-            m_previous_offset = m_offset;
-            using (Graphics graphics = panel.CreateGraphics())
+            f.m_previous_offset = f.m_offset;
+            TabPage tab = tabcontrol.SelectedTab;
+            using (Graphics graphics = tab.CreateGraphics())
             {
                 System.Drawing.Imaging.BitmapData bmpData =
-                    m_bitmap.LockBits(new Rectangle(0, 0, 128, 128), System.Drawing.Imaging.ImageLockMode.ReadWrite, m_bitmap.PixelFormat);
+                    f.m_bitmap.LockBits(new Rectangle(0, 0, 128, 128), System.Drawing.Imaging.ImageLockMode.ReadWrite, f.m_bitmap.PixelFormat);
                 IntPtr ptr = bmpData.Scan0;
-                System.Runtime.InteropServices.Marshal.Copy(chr_data, m_offset, ptr, 128 * 128);
-                m_bitmap.UnlockBits(bmpData);
+                System.Runtime.InteropServices.Marshal.Copy(f.chr_data, f.m_offset, ptr, 128 * 128);
+                f.m_bitmap.UnlockBits(bmpData);
                 graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half;
                 graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
-                graphics.DrawImage(m_bitmap, 0, 0, 128 * 3, 128 * 3);
+                graphics.DrawImage(f.m_bitmap, 0, 0, 128 * 3, 128 * 3);
             }
         }
         private void loadbtn_Click(object sender, EventArgs e)
@@ -78,29 +133,32 @@ namespace FormsLearning
                     string filepath = openFileDialog.FileName;
                     try
                     {
-                        m_filename = filepath;
-                        string extension = Path.GetExtension(m_filename).Trim();
+                        CHRFile f = make_chr_file();
+                        tabcontrol.SelectedTab.Text = Path.GetFileName(filepath);
+                        bool nesfile;
+                        f.m_filename = filepath;
+                        string extension = Path.GetExtension(f.m_filename).Trim();
                         if (extension == ".nes")
                         {
-                            m_offset = GetNESOffset();
+                            f.m_offset = GetNESOffset();
                             nesfile = true;
                         }
                         else
                         {
-                            m_offset = 0;
+                            f.m_offset = 0;
                             nesfile = false;
                         }
-                        if (m_offset == -1)
+                        if (f.m_offset == -1)
                         {
                             MessageBox.Show("Not a valid NES file");
                             return;
                         }
-                        using (FileStream filestream = new FileStream(m_filename, FileMode.Open, FileAccess.Read))
+                        using (FileStream filestream = new FileStream(f.m_filename, FileMode.Open, FileAccess.Read))
                         {
-                            if (filestream.Length < 4096) file_data = new byte[4096];
-                            else file_data = new byte[filestream.Length];
+                            if (filestream.Length < 4096) f.file_data = new byte[4096];
+                            else f.file_data = new byte[filestream.Length];
                             filestream.Seek(nesfile ? 16 : 0, SeekOrigin.Begin);
-                            filestream.Read(file_data, 0, nesfile ? (int)filestream.Length - 16 : (int)filestream.Length);
+                            filestream.Read(f.file_data, 0, nesfile ? (int)filestream.Length - 16 : (int)filestream.Length);
                             List<byte> chr_data_temp = new List<byte>();
                             for (int row = 0; row < (filestream.Length / 256); row++)
                             {
@@ -111,8 +169,8 @@ namespace FormsLearning
                                         for (int bits = 7; bits >= 0; bits--)
                                         {
                                             int mask_value = 1 << bits;
-                                            int plane1 = file_data[tile_in_row * 16 + tile_row + row * 256] & mask_value;
-                                            int plane2 = file_data[tile_in_row * 16 + tile_row + row * 256 + 8] & mask_value;
+                                            int plane1 = f.file_data[tile_in_row * 16 + tile_row + row * 256] & mask_value;
+                                            int plane2 = f.file_data[tile_in_row * 16 + tile_row + row * 256 + 8] & mask_value;
                                             plane1 = plane1 >> bits;
                                             plane2 = plane2 >> bits;
                                             int index = (plane1 + 2 * plane2);
@@ -121,11 +179,11 @@ namespace FormsLearning
                                     }
                                 }
                             }
-                            chr_data = chr_data_temp.ToArray();
+                            f.chr_data = chr_data_temp.ToArray();
                         }
-                        scrollbar.Maximum = (chr_data.Length / 1024) - 1;
-                        scrollbar.Value = m_offset / 1024;
-                        DrawToPanel();
+                        scrollbar.Maximum = (f.chr_data.Length / 1024) - 1;
+                        scrollbar.Value = f.m_offset / 1024;
+                        tabcontrol_selected(sender, EventArgs.Empty);
                     }
                     catch (Exception ex)
                     {
@@ -137,52 +195,60 @@ namespace FormsLearning
 
         private void uprow_Click(object sender, EventArgs e)
         {
-            m_offset -= 256;
+            CHRFile f = get_chr_file();
+            f.m_offset -= 256;
             DrawToPanel();
         }
 
         private void downrow_Click(object sender, EventArgs e)
         {
-            m_offset += 256;
+            CHRFile f = get_chr_file();
+            f.m_offset += 256;
             DrawToPanel();
         }
 
         private void uppage_Click(object sender, EventArgs e)
         {
-
-            m_offset -= 4096;
+            CHRFile f = get_chr_file();
+            f.m_offset -= 4096;
             DrawToPanel();
         }
 
         private void downpage_Click(object sender, EventArgs e)
         {
-            m_offset += 4096;
+            CHRFile f = get_chr_file();
+            f.m_offset += 4096;
             DrawToPanel();
         }
 
         private void uptile_Click(object sender, EventArgs e)
         {
-            m_offset -= 16;
+            CHRFile f = get_chr_file();
+            f.m_offset -= 16;
             DrawToPanel();
         }
         private void downtile_Click(object sender, EventArgs e)
         {
-            m_offset += 16;
+            CHRFile f = get_chr_file();
+            f.m_offset += 16;
             DrawToPanel();
         }
 
         private void panel_Paint(object sender, PaintEventArgs e)
         {
-            if (file_data == null) return;
-            if (m_filename != null || (m_offset + 4096 > file_data.Length || m_offset < 0)) DrawToPanel();
+            CHRFile f = get_chr_file();
+            if (f.file_data == null) return;
+            if (f.m_filename != null || (f.m_offset + 4096 > f.file_data.Length || f.m_offset < 0)) DrawToPanel();
         }
 
         private void panel_Mouse(object sender, MouseEventArgs e)
         {
-            if (file_data == null) return;
+            CHRFile f = get_chr_file();
+            if (f.file_data == null) return;
             if (e.Button == MouseButtons.Left)
             {
-                using (Graphics graphics = panel.CreateGraphics())
+                TabPage tab = tabcontrol.SelectedTab;
+                using (Graphics graphics = tab.CreateGraphics())
                 {
                     int x = e.X - (e.X % (8 * 3));
                     int y = e.Y - (e.Y % (8 * 3));
@@ -190,16 +256,18 @@ namespace FormsLearning
                     if (x > 120 * 3) x = 120 * 3;
                     if (y < 0) y = 0;
                     if (y > 120 * 3) y = 120 * 3;
-                    m_sel_x = x / (8 * 3);
-                    m_sel_y = y / (8 * 3);
-                    m_selected_tile = x + y * 16;
-                    if (m_sel_prev_x != m_sel_x || m_sel_prev_y != m_sel_y)
+                    f.m_sel_x = x / (8 * 3);
+                    f.m_sel_y = y / (8 * 3);
+                    f.m_selected_tile = x + y * 16;
+                    if (f.m_sel_prev_x != f.m_sel_x || f.m_sel_prev_y != f.m_sel_y)
                     {
                         DrawToPanel();
                         graphics.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), x, y, 8 * 3, 8 * 3);
+                        f.m_graphically_x = x;
+                        f.m_graphically_y = y;
                     }
-                    m_sel_prev_x = m_sel_x;
-                    m_sel_prev_y = m_sel_y;
+                    f.m_sel_prev_x = f.m_sel_x;
+                    f.m_sel_prev_y = f.m_sel_y;
                 }
                 DrawToSelection();
             }
@@ -211,18 +279,19 @@ namespace FormsLearning
             {
                 using (Graphics graphics = engpanel.CreateGraphics())
                 {
+                    CHRFile f = get_chr_file();
                     System.Drawing.Imaging.BitmapData bmpData =
-                    m_selected_bitmap.LockBits(new Rectangle(0, 0, 8, 8), System.Drawing.Imaging.ImageLockMode.ReadWrite, m_selected_bitmap.PixelFormat);
+                    f.m_selected_bitmap.LockBits(new Rectangle(0, 0, 8, 8), System.Drawing.Imaging.ImageLockMode.ReadWrite, f.m_selected_bitmap.PixelFormat);
                     IntPtr ptr = bmpData.Scan0;
                     for (int y = 0; y < 8; y++)
                     {
-                        System.Runtime.InteropServices.Marshal.Copy(chr_data, m_offset + m_sel_x * 8 + y * 8 * 16 + m_sel_y * 8 * 8 * 16, ptr, 8);
+                        System.Runtime.InteropServices.Marshal.Copy(f.chr_data, f.m_offset + f.m_sel_x * 8 + y * 8 * 16 + f.m_sel_y * 8 * 8 * 16, ptr, 8);
                         ptr += 8;
                     }
-                    m_selected_bitmap.UnlockBits(bmpData);
+                    f.m_selected_bitmap.UnlockBits(bmpData);
                     graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half;
                     graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
-                    graphics.DrawImage(m_selected_bitmap, 0, 0, 128, 128);
+                    graphics.DrawImage(f.m_selected_bitmap, 0, 0, 128, 128);
                 }
             }
             catch (Exception ex)
@@ -233,10 +302,11 @@ namespace FormsLearning
 
         private void ScrollMainPanel(int scrollvalue)
         {
+            CHRFile f = get_chr_file();
             if (scrollvalue < 0) scrollvalue = 0;
             if (scrollvalue > (scrollbar.Maximum - scrollbar.LargeChange)) scrollvalue = scrollbar.Maximum - scrollbar.LargeChange + 1;
             scrollbar.Value = scrollvalue;
-            m_offset = scrollbar.Value * 1024;
+            f.m_offset = scrollbar.Value * 1024;
             DrawToPanel();
         }
 
@@ -262,12 +332,13 @@ namespace FormsLearning
             {
                 if (colorDialog.ShowDialog() == DialogResult.OK)
                 {
-                    var palA = m_bitmap.Palette;
-                    var palB = m_selected_bitmap.Palette;
+                    CHRFile f = get_chr_file();
+                    var palA = f.m_bitmap.Palette;
+                    var palB = f.m_selected_bitmap.Palette;
                     palA.Entries[color] = colorDialog.Color;
-                    m_bitmap.Palette = palA;
+                    f.m_bitmap.Palette = palA;
                     palB.Entries[color] = colorDialog.Color;
-                    m_bitmap.Palette = palB;
+                    f.m_bitmap.Palette = palB;
                     DrawToPanel();
                     DrawToSelection();
                     switch (color)
@@ -292,12 +363,13 @@ namespace FormsLearning
                     {
                         if (pp.ShowDialog() == DialogResult.OK)
                         {
-                            var palA = m_bitmap.Palette;
-                            var palB = m_selected_bitmap.Palette;
+                            CHRFile f = get_chr_file();
+                            var palA = f.m_bitmap.Palette;
+                            var palB = f.m_selected_bitmap.Palette;
                             palA.Entries[color] = pp.selected_color;
-                            m_bitmap.Palette = palA;
+                            f.m_bitmap.Palette = palA;
                             palB.Entries[color] = pp.selected_color;
-                            m_selected_bitmap.Palette = palB;
+                            f.m_selected_bitmap.Palette = palB;
                             DrawToPanel();
                             DrawToSelection();
                             switch (color)
